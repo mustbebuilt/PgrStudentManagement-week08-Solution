@@ -59,17 +59,39 @@ public class AuthorizationMetadataTests
     }
 
     [Fact]
-    public void StudentsController_HasAuthorizeAttribute()
+    public void StudentsController_HasAuthorizeAttributeAndActionPolicies()
     {
-        var attribute = typeof(StudentsController).GetCustomAttribute<AuthorizeAttribute>();
-        Assert.NotNull(attribute);
+        var classAttribute = typeof(StudentsController).GetCustomAttribute<AuthorizeAttribute>();
+        Assert.NotNull(classAttribute);
+
+        var indexMethod = typeof(StudentsController).GetMethod(nameof(StudentsController.Index));
+        var enrolmentsMethod = typeof(StudentsController).GetMethod(nameof(StudentsController.Enrolments));
+
+        Assert.NotNull(indexMethod);
+        Assert.NotNull(enrolmentsMethod);
+
+        var indexPolicy = indexMethod.GetCustomAttribute<AuthorizeAttribute>();
+        var enrolmentsPolicy = enrolmentsMethod.GetCustomAttribute<AuthorizeAttribute>();
+
+        Assert.NotNull(indexPolicy);
+        Assert.Equal(PgrStudentManagement.Business.Security.AppPolicies.StudentsList, indexPolicy.Policy);
+
+        Assert.NotNull(enrolmentsPolicy);
+        Assert.Equal(PgrStudentManagement.Business.Security.AppPolicies.StudentsReadEnrolments, enrolmentsPolicy.Policy);
     }
 
     [Fact]
-    public void StudentsApiController_HasAuthorizeAttribute()
+    public void StudentsApiController_HasAuthorizeAttributeAndActionPolicies()
     {
-        var attribute = typeof(StudentsApiController).GetCustomAttribute<AuthorizeAttribute>();
-        Assert.NotNull(attribute);
+        var classAttribute = typeof(StudentsApiController).GetCustomAttribute<AuthorizeAttribute>();
+        Assert.NotNull(classAttribute);
+
+        var getEnrolmentsMethod = typeof(StudentsApiController).GetMethod(nameof(StudentsApiController.GetEnrolments));
+        Assert.NotNull(getEnrolmentsMethod);
+
+        var enrolmentsPolicy = getEnrolmentsMethod.GetCustomAttribute<AuthorizeAttribute>();
+        Assert.NotNull(enrolmentsPolicy);
+        Assert.Equal(PgrStudentManagement.Business.Security.AppPolicies.StudentsReadEnrolments, enrolmentsPolicy.Policy);
     }
 
     [Fact]

@@ -8,3 +8,4 @@ public sealed class DummyInputViewModel
     [StringLength(200)]
     public string Input { get; set; } = string.Empty;
 }
+

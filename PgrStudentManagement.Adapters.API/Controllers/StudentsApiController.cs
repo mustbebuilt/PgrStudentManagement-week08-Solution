@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PgrStudentManagement.Adapters.API.Mappers;
 using PgrStudentManagement.Adapters.API.Responses;
+using PgrStudentManagement.Business.Security;
 using PgrStudentManagement.Business.Students.GetStudentSummary;
 using PgrStudentManagement.Business.Students.ViewStudentEnrolments;
 
@@ -29,6 +30,7 @@ public class StudentsApiController : ControllerBase
         _lookupMapper = lookupMapper;
     }
 
+    [Authorize(Policy = AppPolicies.StudentsReadEnrolments)]
     [HttpGet("{studentNumber}/enrolments")]
     public async Task<ActionResult<StudentEnrolmentsResponse>> GetEnrolments(
         string studentNumber,

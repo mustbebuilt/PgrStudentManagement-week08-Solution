@@ -1,0 +1,12 @@
+@baseUrl = http://localhost:5066
+
+### 1. Sign in as Student
+# @name login
+POST {{baseUrl}}/account/login
+Content-Type: application/x-www-form-urlencoded
+
+Username=student.user&Password=Demo-Student-Password
+
+### 2. Access protected Students Enrolments API without broad role permission (Expect 403 Forbidden)
+GET {{baseUrl}}/api/students/S100001/enrolments
+Accept: application/json

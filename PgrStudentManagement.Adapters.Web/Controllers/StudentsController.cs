@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PgrStudentManagement.Adapters.Web.Mappers;
+using PgrStudentManagement.Business.Security;
 using PgrStudentManagement.Business.Students.ViewStudentEnrolments;
 
 namespace PgrStudentManagement.Adapters.Web.Controllers;
@@ -19,12 +20,14 @@ public class StudentsController : Controller
         _mapper = mapper;
     }
 
+    [Authorize(Policy = AppPolicies.StudentsList)]
     [HttpGet]
     public IActionResult Index()
     {
         return RedirectToAction(nameof(Enrolments), new { studentNumber = "S100001" });
     }
 
+    [Authorize(Policy = AppPolicies.StudentsReadEnrolments)]
     [HttpGet]
     public async Task<IActionResult> Enrolments(
         string? studentNumber,

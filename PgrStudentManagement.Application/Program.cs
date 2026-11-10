@@ -9,6 +9,7 @@ using PgrStudentManagement.Adapters.Persistence.Documents.Mappers;
 using PgrStudentManagement.Adapters.Persistence.Relational;
 using PgrStudentManagement.Adapters.Persistence.Relational.Gateway;
 using PgrStudentManagement.Adapters.Persistence.Relational.Mappers;
+using PgrStudentManagement.Adapters.Web.Authentication.Configuration;
 using PgrStudentManagement.Adapters.Web.Controllers;
 using PgrStudentManagement.Adapters.Web.Mappers;
 using PgrStudentManagement.Business.AcademicSupervisors.AssignSupervisor;
@@ -17,6 +18,7 @@ using PgrStudentManagement.Business.DummyModule;
 using PgrStudentManagement.Business.ResearchActivities.Gateway;
 using PgrStudentManagement.Business.ResearchActivities.RecordResearchActivity;
 using PgrStudentManagement.Business.ResearchActivities.ViewStudentResearchActivities;
+using PgrStudentManagement.Business.Security;
 using PgrStudentManagement.Business.Students.Gateway;
 using PgrStudentManagement.Business.Students.GetStudentSummary;
 using PgrStudentManagement.Business.Students.ViewStudentEnrolments;
@@ -77,6 +79,10 @@ builder.Services.AddScoped<IViewStudentResearchActivitiesUseCase, ViewStudentRes
 builder.Services.AddScoped<IAssignSupervisorUseCase, AssignSupervisorUseCase>();
 builder.Services.AddScoped<IDummyService, DummyService>();
 
+// Register configuration
+builder.Services.Configure<DemoAuthenticationOptions>(
+    builder.Configuration.GetSection(DemoAuthenticationOptions.SectionName));
+
 // Register cookie authentication
 builder.Services
     .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
@@ -93,6 +99,51 @@ builder.Services
         options.SlidingExpiration = true;
         options.ExpireTimeSpan = TimeSpan.FromMinutes(30);
     });
+
+// Register RBAC authorisation policies
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy(
+        AppPolicies.StudentsList,
+        policy => policy.RequireRole(
+            AppRoles.CollegeAdministrator,
+            AppRoles.PostgraduateResearchTutor));
+
+    options.AddPolicy(
+        AppPolicies.StudentsRead,
+        policy => policy.RequireRole(
+            AppRoles.CollegeAdministrator,
+            AppRoles.PostgraduateResearchTutor));
+
+    options.AddPolicy(
+        AppPolicies.StudentsCreate,
+        policy => policy.RequireRole(
+            AppRoles.CollegeAdministrator));
+
+    options.AddPolicy(
+        AppPolicies.StudentsUpdateStatus,
+        policy => policy.RequireRole(
+            AppRoles.CollegeAdministrator,
+            AppRoles.PostgraduateResearchTutor));
+
+    options.AddPolicy(
+        AppPolicies.StudentsUpdateExpectedDate,
+        policy => policy.RequireRole(
+            AppRoles.CollegeAdministrator,
+            AppRoles.PostgraduateResearchTutor));
+
+    options.AddPolicy(
+        AppPolicies.StudentsRecordSubmission,
+        policy => policy.RequireRole(
+            AppRoles.CollegeAdministrator,
+            AppRoles.PostgraduateResearchTutor));
+
+    options.AddPolicy(
+        AppPolicies.StudentsReadEnrolments,
+        policy => policy.RequireRole(
+            AppRoles.CollegeAdministrator,
+            AppRoles.PostgraduateResearchTutor));
+});
 
 // Register MVC and API controllers from adapter assemblies
 builder.Services

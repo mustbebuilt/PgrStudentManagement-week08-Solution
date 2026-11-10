@@ -56,8 +56,11 @@
                         @if (User.Identity?.IsAuthenticated == true)
                         {
                             <li class="nav-item d-flex align-items-center me-2">
-                                <span class="navbar-text">
+                                <span class="navbar-text me-2">
                                     Signed in as @User.Identity.Name
+                                </span>
+                                <span class="badge bg-secondary me-2">
+                                    Role: @User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.Role)?.Value
                                 </span>
                             </li>
                             <li class="nav-item">

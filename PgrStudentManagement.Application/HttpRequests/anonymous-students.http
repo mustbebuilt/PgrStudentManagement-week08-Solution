@@ -1,0 +1,9 @@
+@baseUrl = http://localhost:5066
+
+### 1. Anonymous request to protected Students API (Expect 401 Unauthorized)
+GET {{baseUrl}}/api/students/S100001/enrolments
+Accept: application/json
+
+### 2. Anonymous request to Student lookup integration endpoint (Expect 200 OK)
+GET {{baseUrl}}/api/students/S100001/lookup
+Accept: application/json

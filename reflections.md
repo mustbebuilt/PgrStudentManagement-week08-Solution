@@ -225,3 +225,108 @@ Before deploying this authentication approach to production, several architectur
 ### Opportunities for Improvement:
 - **Coupling in AccountController**: Placing credential checking against `IConfiguration` directly in `AccountController` violates Single Responsibility. Introducing an `IAuthenticationService` or `IUserRepository` port in Business/Application would maintain Clean Architecture separation.
 - **Dual Adapter Split**: Splitting the application into `Adapters.Web` (MVC) and `Adapters.API` (REST) inside a single executable host creates subtle boundary nuances (e.g., handling cookie authentication redirects for MVC vs 401 Unauthorized status codes for APIs). Standardizing on JWT tokens for APIs and cookie authentication for browser sessions, managed by dedicated policies, would provide cleaner separation.
+
+
+---
+
+# Week 8 Laboratory 2: Implementing Role-Based Access Control — Architectural Reflections
+
+This document records the answers to the reflection questions from Section 9 of [week08-security-lab2-instructions.md](docs/week08-security-lab2-instructions.md).
+
+---
+
+## 1. Which Business artefacts were used to identify the tasks in the permission matrix?
+
+The Business tasks were derived directly from:
+- **Input port contracts** and **use case interactors** in `PgrStudentManagement.Business` (e.g., `IViewStudentEnrolmentsUseCase`, `IGetStudentSummaryUseCase`, `IAssignSupervisorUseCase`).
+- **Core student lifecycle operations** (student registration, academic status transitions, expected thesis submission date adjustments, formal submission logging, and enrolment inspection).
+
+By deriving permissions from use cases rather than UI controllers, access control remains aligned with domain capabilities regardless of whether they are consumed via MVC, REST, or automated batch processes.
+
+---
+
+## 2. Why is a role different from a permission?
+
+- **Permission:** A fine-grained authorization expressing a specific operation on a protected object (`{Operation, ProtectedObject}`), such as `{Read, Enrolment}` or `{Create, Student}`.
+- **Role:** A named collection of business responsibilities assigned to users within an organization (e.g., `CollegeAdministrator`, `AcademicSupervisor`).
+
+Decoupling roles from permissions ensures that changes to organizational job functions or access policies can be managed by reconfiguring policy definitions without having to modify individual controller endpoints or use cases.
+
+---
+
+## 3. Why is a controller route not itself a permission?
+
+A controller route (such as `GET /Students/Enrolments` or `GET /api/students/{id}/enrolments`) is an incoming delivery adapter detail. 
+
+A permission represents a business capability:
+- Multiple routes across different delivery mechanisms (MVC web views, REST APIs, gRPC endpoints, CLI tools) may expose the exact same business permission (`{Read, Enrolment}`).
+- Defining permissions at the route level tightly couples security policy to URL structure, preventing reuse and leading to policy duplication across different delivery layers.
+
+---
+
+## 4. Why must both GET and POST actions use the same permission policy?
+
+- **GET actions** present the form or interface to the user.
+- **POST actions** execute the actual state change on the server.
+
+If different policies were applied:
+1. If GET were protected but POST unprotected, an unauthorized user could simply bypass the user interface and issue direct HTTP POST requests using tools like `curl` or automated scripts.
+2. If POST were restricted to a role but GET left accessible to others, users would be presented with forms they are not authorized to submit, creating confusion and broken UX.
+
+Consistency across all HTTP verbs protecting a capability is required to maintain a secure server boundary.
+
+---
+
+## 5. What is the difference between an `X` and a `C` entry in the matrix?
+
+- **`X` (Unconditional Role Grant):** The role is broadly authorized to execute the operation across all instances of the resource without needing relationship or ownership checks (e.g., a `CollegeAdministrator` listing all students).
+- **`C` (Conditional / Contextual Grant):** The role is permitted to perform the operation only when a dynamic relationship or resource constraint is satisfied (e.g., an `AcademicSupervisor` viewing only students currently assigned to them, or a `Student` viewing only their own record).
+
+---
+
+## 6. Why can an Academic Supervisor role not by itself express “assigned Students only”?
+
+A role is a static attribute attached to the user's authenticated principal (`ClaimTypes.Role`). It conveys *who the user is broadly*, but has no insight into the *resource target* of a specific request. 
+
+Evaluating "assigned students only" requires dynamic, runtime information:
+1. The authenticated supervisor's identifier (`UserId` from `ClaimTypes.NameIdentifier`).
+2. The specific student being accessed (`StudentNumber`).
+3. The persisted relationship between the two (querying active `SupervisoryAssignment` records where `EndDate == null`).
+
+Attempting to represent this with roles would lead to **role explosion** (e.g., creating roles like `SupervisorFor_S100001`).
+
+---
+
+## 7. What role claim is added to `ClaimsPrincipal` at sign-in?
+
+During sign-in in `AccountController`, the authenticated identity is granted a claim of type:
+```csharp
+System.Security.Claims.ClaimTypes.Role
+```
+populated with the user's assigned role constant from `AppRoles` (e.g., `AppRoles.CollegeAdministrator`, `AppRoles.PostgraduateResearchTutor`, `AppRoles.AcademicSupervisor`, `AppRoles.Student`).
+
+---
+
+## 8. What causes `401`, and what causes `403`?
+
+- **`401 Unauthorized` (Authentication Failure):** The request lacks valid authentication evidence. The caller is anonymous or has presented an expired/invalid session cookie or token.
+- **`403 Forbidden` (Authorisation Failure):** The caller is successfully authenticated and their identity is known, but they do not possess the required role, claim, or policy permissions to access the requested resource.
+
+---
+
+## 9. Why is `HttpStudentLookupAdapter` not naturally represented by an end-user role?
+
+`HttpStudentLookupAdapter` is an internal machine-to-machine integration component used by the Academic Supervisors module to query Students over HTTP. It is not an interactive human user logging into an account. 
+
+Applying end-user roles to internal service calls conflates human user identity with service identity. Automated services require dedicated service-to-service authentication mechanisms (such as OAuth 2.0 Client Credentials with JWT Bearer tokens or mTLS) rather than end-user cookie sessions.
+
+---
+
+## 10. Which contextual access rule would you implement first, and what data would the authorisation decision require?
+
+- **Rule to Implement First:**
+  > An Academic Supervisor may view student details or enrolments only when a current supervisory assignment links them to the requested student.
+- **Data Required for the Decision:**
+  1. The authenticated supervisor's `UserId` (extracted from `ClaimTypes.NameIdentifier`).
+  2. The target student's `StudentNumber` (from the loaded `Student` or request parameters).
+  3. Relational lookup via `IAcademicSupervisorAssignmentLookup` checking for an active `SupervisoryAssignment` where `SupervisorStaffNumber == userId && StudentNumber == studentNumber && EndDate == null`.

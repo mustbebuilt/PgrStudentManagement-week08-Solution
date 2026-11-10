@@ -6,3 +6,4 @@ public interface IDummyService
 {
     DummyResult Process(string input);
 }
+

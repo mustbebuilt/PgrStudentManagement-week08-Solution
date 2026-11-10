@@ -1,0 +1,9 @@
+@baseUrl = http://localhost:5066
+
+### 1. Anonymous Student Lookup Exception (Expect 200 OK)
+GET {{baseUrl}}/api/students/S100001/lookup
+Accept: application/json
+
+### 2. Anonymous Student Lookup Exception for Non-existent Student (Expect 404 Not Found)
+GET {{baseUrl}}/api/students/UNKNOWN/lookup
+Accept: application/json

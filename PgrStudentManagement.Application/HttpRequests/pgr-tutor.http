@@ -1,0 +1,12 @@
+@baseUrl = http://localhost:5066
+
+### 1. Sign in as Postgraduate Research Tutor
+# @name login
+POST {{baseUrl}}/account/login
+Content-Type: application/x-www-form-urlencoded
+
+Username=pgr.tutor&Password=Demo-Tutor-Password
+
+### 2. Access protected Students Enrolments API (Expect 200 OK)
+GET {{baseUrl}}/api/students/S100001/enrolments
+Accept: application/json

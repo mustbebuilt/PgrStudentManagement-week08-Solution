@@ -65,3 +65,4 @@ In Week 8 Laboratory 1, authentication establishes identity (`ClaimsPrincipal`) 
 | Students API Enrolments (Authenticated) | `GET /api/students/S100001/enrolments` | Authenticated | 200 OK with JSON | 200 OK with JSON | Passed |
 | Students API Lookup (Anonymous) | `GET /api/students/S100001/lookup` | Anonymous | 200 OK with JSON | 200 OK with JSON | Passed |
 | Academic Supervisors HTTP Lookup | `POST /api/students/S100001/academic-supervisors` | Anonymous / Integration | Successful lookup via HTTP client | Lookup succeeds via anonymous endpoint | Passed |
+

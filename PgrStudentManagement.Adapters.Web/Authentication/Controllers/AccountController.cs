@@ -3,7 +3,8 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
+using PgrStudentManagement.Adapters.Web.Authentication.Configuration;
 using PgrStudentManagement.Adapters.Web.Authentication.Models;
 
 namespace PgrStudentManagement.Adapters.Web.Authentication.Controllers;
@@ -11,11 +12,11 @@ namespace PgrStudentManagement.Adapters.Web.Authentication.Controllers;
 [Route("account")]
 public sealed class AccountController : Controller
 {
-    private readonly IConfiguration _configuration;
+    private readonly DemoAuthenticationOptions _authenticationOptions;
 
-    public AccountController(IConfiguration configuration)
+    public AccountController(IOptions<DemoAuthenticationOptions> options)
     {
-        _configuration = configuration;
+        _authenticationOptions = options.Value;
     }
 
     [AllowAnonymous]
@@ -37,14 +38,12 @@ public sealed class AccountController : Controller
             return View(model);
         }
 
-        var expectedUsername =
-            _configuration["DemoAuthentication:Username"];
+        var user = _authenticationOptions.Users
+            .SingleOrDefault(candidate =>
+                candidate.Username == model.Username
+                && candidate.Password == model.Password);
 
-        var expectedPassword =
-            _configuration["DemoAuthentication:Password"];
-
-        if (model.Username != expectedUsername
-            || model.Password != expectedPassword)
+        if (user is null)
         {
             ModelState.AddModelError(
                 string.Empty,
@@ -57,16 +56,18 @@ public sealed class AccountController : Controller
         {
             new(
                 ClaimTypes.NameIdentifier,
-                model.Username),
+                user.UserId),
             new(
                 ClaimTypes.Name,
-                model.Username)
+                user.DisplayName),
+            new(
+                ClaimTypes.Role,
+                user.Role)
         };
 
         var identity = new ClaimsIdentity(
             claims,
-            CookieAuthenticationDefaults
-                .AuthenticationScheme);
+            CookieAuthenticationDefaults.AuthenticationScheme);
 
         var principal = new ClaimsPrincipal(identity);
 

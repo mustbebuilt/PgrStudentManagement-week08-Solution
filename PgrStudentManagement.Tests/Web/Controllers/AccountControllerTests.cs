@@ -4,10 +4,12 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
+using PgrStudentManagement.Adapters.Web.Authentication.Configuration;
 using PgrStudentManagement.Adapters.Web.Authentication.Controllers;
 using PgrStudentManagement.Adapters.Web.Authentication.Models;
+using PgrStudentManagement.Business.Security;
 
 namespace PgrStudentManagement.Tests.Web.Controllers;
 
@@ -59,11 +61,22 @@ public class AccountControllerTests
     }
 
     private static (AccountController Controller, FakeAuthService AuthService) CreateController(
-        Dictionary<string, string?> configValues)
+        List<DemoUser>? users = null)
     {
-        var config = new ConfigurationBuilder()
-            .AddInMemoryCollection(configValues)
-            .Build();
+        var options = new DemoAuthenticationOptions
+        {
+            Users = users ??
+            [
+                new DemoUser
+                {
+                    UserId = "CA001",
+                    Username = "college.admin",
+                    Password = "Demo-College-Password",
+                    DisplayName = "Development College Administrator",
+                    Role = AppRoles.CollegeAdministrator
+                }
+            ]
+        };
 
         var authService = new FakeAuthService();
         var services = new ServiceCollection();
@@ -74,7 +87,7 @@ public class AccountControllerTests
             RequestServices = services.BuildServiceProvider()
         };
 
-        var controller = new AccountController(config)
+        var controller = new AccountController(Options.Create(options))
         {
             ControllerContext = new ControllerContext { HttpContext = httpContext },
             Url = new FakeUrlHelper(),
@@ -87,11 +100,7 @@ public class AccountControllerTests
     [Fact]
     public void Login_Get_ReturnsViewWithReturnUrl()
     {
-        var (controller, _) = CreateController(new()
-        {
-            ["DemoAuthentication:Username"] = "demo.user",
-            ["DemoAuthentication:Password"] = "secret"
-        });
+        var (controller, _) = CreateController();
 
         var result = controller.Login("/dummy/private-page");
         var viewResult = Assert.IsType<ViewResult>(result);
@@ -102,15 +111,11 @@ public class AccountControllerTests
     [Fact]
     public async Task Login_Post_InvalidCredentials_AddsModelErrorAndReturnsView()
     {
-        var (controller, authService) = CreateController(new()
-        {
-            ["DemoAuthentication:Username"] = "demo.user",
-            ["DemoAuthentication:Password"] = "secret"
-        });
+        var (controller, authService) = CreateController();
 
         var model = new LoginViewModel
         {
-            Username = "demo.user",
+            Username = "college.admin",
             Password = "wrong-password"
         };
 
@@ -121,18 +126,14 @@ public class AccountControllerTests
     }
 
     [Fact]
-    public async Task Login_Post_ValidCredentials_SignsInAndRedirectsToReturnUrl()
+    public async Task Login_Post_ValidCredentials_SignsInWithUserIdAndRoleAndRedirectsToReturnUrl()
     {
-        var (controller, authService) = CreateController(new()
-        {
-            ["DemoAuthentication:Username"] = "demo.user",
-            ["DemoAuthentication:Password"] = "secret"
-        });
+        var (controller, authService) = CreateController();
 
         var model = new LoginViewModel
         {
-            Username = "demo.user",
-            Password = "secret",
+            Username = "college.admin",
+            Password = "Demo-College-Password",
             ReturnUrl = "/dummy/private-page"
         };
 
@@ -141,22 +142,20 @@ public class AccountControllerTests
         Assert.Equal("/dummy/private-page", redirect.Url);
 
         Assert.NotNull(authService.SignedInPrincipal);
-        Assert.Equal("demo.user", authService.SignedInPrincipal.Identity?.Name);
+        Assert.Equal("Development College Administrator", authService.SignedInPrincipal.Identity?.Name);
+        Assert.Equal("CA001", authService.SignedInPrincipal.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+        Assert.True(authService.SignedInPrincipal.IsInRole(AppRoles.CollegeAdministrator));
     }
 
     [Fact]
     public async Task Login_Post_ValidCredentials_NonLocalReturnUrl_RedirectsToDummy()
     {
-        var (controller, authService) = CreateController(new()
-        {
-            ["DemoAuthentication:Username"] = "demo.user",
-            ["DemoAuthentication:Password"] = "secret"
-        });
+        var (controller, authService) = CreateController();
 
         var model = new LoginViewModel
         {
-            Username = "demo.user",
-            Password = "secret",
+            Username = "college.admin",
+            Password = "Demo-College-Password",
             ReturnUrl = "https://evil.com"
         };
 
@@ -170,11 +169,7 @@ public class AccountControllerTests
     [Fact]
     public async Task Logout_SignsOutAndRedirectsToDummy()
     {
-        var (controller, authService) = CreateController(new()
-        {
-            ["DemoAuthentication:Username"] = "demo.user",
-            ["DemoAuthentication:Password"] = "secret"
-        });
+        var (controller, authService) = CreateController();
 
         var result = await controller.Logout();
         var redirect = Assert.IsType<RedirectToActionResult>(result);
@@ -186,7 +181,7 @@ public class AccountControllerTests
     [Fact]
     public void AccessDenied_ReturnsView()
     {
-        var (controller, _) = CreateController(new());
+        var (controller, _) = CreateController();
         var result = controller.AccessDenied();
         Assert.IsType<ViewResult>(result);
     }
