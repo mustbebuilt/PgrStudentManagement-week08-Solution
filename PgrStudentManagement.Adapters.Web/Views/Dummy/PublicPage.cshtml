@@ -1,0 +1,21 @@
+@model PgrStudentManagement.Adapters.Web.DummyModule.Models.DummyInputViewModel
+
+@{
+    ViewData["Title"] = "Public Page";
+}
+
+<h1>Public Page</h1>
+
+<form asp-controller="Dummy"
+      asp-action="PublicResult"
+      method="post">
+    <div asp-validation-summary="ModelOnly"></div>
+
+    <div>
+        <label asp-for="Input"></label>
+        <input asp-for="Input" />
+        <span asp-validation-for="Input"></span>
+    </div>
+
+    <button type="submit">Submit</button>
+</form>

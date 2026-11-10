@@ -1,0 +1,107 @@
+@model PgrStudentManagement.Adapters.Web.ViewModels.RecordResearchActivityViewModel
+
+@{
+    ViewData["Title"] = "Record Research Activity";
+}
+
+<div class="container py-3">
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <div>
+            <h1 class="h2 mb-1">Record Research Activity</h1>
+            <p class="text-muted mb-0">Record a new postgraduate research milestone, reflection, or event (W5-UC04).</p>
+        </div>
+        <div>
+            <a asp-action="Index" asp-route-studentNumber="@Model.StudentNumber" class="btn btn-outline-secondary btn-sm">
+                &larr; View Activities
+            </a>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+    {
+        <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+            <strong>Error:</strong> @Model.ErrorMessage
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <form asp-action="Record" method="post">
+                        @Html.AntiForgeryToken()
+
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                        <div class="mb-3">
+                            <label asp-for="StudentNumber" class="form-label fw-semibold"></label>
+                            <input asp-for="StudentNumber" class="form-control" placeholder="e.g. S100001" />
+                            <span asp-validation-for="StudentNumber" class="text-danger small"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="ActivityType" class="form-label fw-semibold"></label>
+                            <select asp-for="ActivityType" asp-items="Model.AvailableActivityTypes" class="form-select"></select>
+                            <span asp-validation-for="ActivityType" class="text-danger small"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Title" class="form-label fw-semibold"></label>
+                            <input asp-for="Title" class="form-control" placeholder="Brief descriptive title of the activity" />
+                            <span asp-validation-for="Title" class="text-danger small"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="ActivityDate" class="form-label fw-semibold"></label>
+                            <input asp-for="ActivityDate" type="date" class="form-control" />
+                            <span asp-validation-for="ActivityDate" class="text-danger small"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="TagsInput" class="form-label fw-semibold"></label>
+                            <input asp-for="TagsInput" class="form-control" placeholder="e.g. literature, conference, experiment (comma-separated)" />
+                            <span class="form-text text-muted">Separate multiple tags with commas.</span>
+                        </div>
+
+                        <div class="mb-4">
+                            <label asp-for="Notes" class="form-label fw-semibold"></label>
+                            <textarea asp-for="Notes" class="form-control" rows="4" placeholder="Enter additional notes, outcomes, or reflections..."></textarea>
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-2">
+                            <a asp-action="Index" asp-route-studentNumber="@Model.StudentNumber" class="btn btn-outline-secondary">
+                                Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary px-4">
+                                Record Activity
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm bg-light">
+                <div class="card-body p-4">
+                    <h5 class="card-title fw-bold">Clean Architecture Rule</h5>
+                    <p class="card-text small text-muted">
+                        This Razor form submits to <code>ResearchActivitiesController</code> in the Web incoming adapter.
+                        The controller executes the <code>IRecordResearchActivityUseCase</code> Business port.
+                    </p>
+                    <hr />
+                    <h6 class="fw-semibold small">Supported Activity Types:</h6>
+                    <ul class="list-unstyled small mb-0 text-muted">
+                        <li>&bull; Research Reflection</li>
+                        <li>&bull; Supervision Meeting</li>
+                        <li>&bull; Conference Attendance</li>
+                        <li>&bull; Publication</li>
+                        <li>&bull; Experiment</li>
+                        <li>&bull; Training Event</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

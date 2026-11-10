@@ -1,0 +1,3 @@
+namespace PgrStudentManagement.Business.ResearchActivities.ViewStudentResearchActivities;
+
+public record ViewStudentResearchActivitiesInput(string StudentNumber);

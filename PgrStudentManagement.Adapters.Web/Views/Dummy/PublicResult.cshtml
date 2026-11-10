@@ -1,0 +1,14 @@
+@model PgrStudentManagement.Domain.DummyModule.DummyResult
+
+@{
+    ViewData["Title"] = "Public Result";
+}
+
+<h1>Result</h1>
+
+<p>@Model.Message</p>
+
+<p>
+    Processed at:
+    @Model.ProcessedAtUtc.ToString("d MMMM yyyy HH:mm:ss 'UTC'")
+</p>
