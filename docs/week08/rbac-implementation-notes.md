@@ -66,3 +66,4 @@ Fine-Grained Contextual Authorisation (Extension 1)
 Business Validation & Domain Rules
     Evaluates whether the requested state change is valid under business invariants
 ```
+

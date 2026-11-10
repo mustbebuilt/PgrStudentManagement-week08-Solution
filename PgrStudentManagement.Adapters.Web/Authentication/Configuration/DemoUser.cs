@@ -12,3 +12,4 @@ public sealed class DemoUser
 
     public string Role { get; set; } = string.Empty;
 }
+

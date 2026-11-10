@@ -10,3 +10,4 @@ public static class AppRoles
 
     public const string Student = "Student";
 }
+

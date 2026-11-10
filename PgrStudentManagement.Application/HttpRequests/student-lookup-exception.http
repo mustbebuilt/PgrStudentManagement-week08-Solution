@@ -7,3 +7,4 @@ Accept: application/json
 ### 2. Anonymous Student Lookup Exception for Non-existent Student (Expect 404 Not Found)
 GET {{baseUrl}}/api/students/UNKNOWN/lookup
 Accept: application/json
+

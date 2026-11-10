@@ -94,3 +94,4 @@ Each permission is formalized as `{Operation, ProtectedObject}`:
 | Integration Capability | Basic Permission | Enforcing Interface | Access Policy |
 |---|---|---|---|
 | Module Student Lookup | `{Lookup, StudentSummary}` | `GET /api/students/{studentNumber}/lookup` | `[AllowAnonymous]` (temporary integration exception for `HttpStudentLookupAdapter`) |
+

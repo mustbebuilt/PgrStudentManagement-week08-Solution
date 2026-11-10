@@ -6,3 +6,4 @@ public sealed class DemoAuthenticationOptions
 
     public List<DemoUser> Users { get; set; } = [];
 }
+

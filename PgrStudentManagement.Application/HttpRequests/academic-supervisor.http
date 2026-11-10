@@ -10,3 +10,4 @@ Username=academic.supervisor&Password=Demo-Supervisor-Password
 ### 2. Access protected Students Enrolments API without role permission (Expect 403 Forbidden)
 GET {{baseUrl}}/api/students/S100001/enrolments
 Accept: application/json
+

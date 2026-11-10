@@ -10,3 +10,4 @@ Username=student.user&Password=Demo-Student-Password
 ### 2. Access protected Students Enrolments API without broad role permission (Expect 403 Forbidden)
 GET {{baseUrl}}/api/students/S100001/enrolments
 Accept: application/json
+

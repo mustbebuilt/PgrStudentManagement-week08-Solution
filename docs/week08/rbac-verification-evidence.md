@@ -31,3 +31,4 @@
 - **Broad Administrative and Oversight Access:** Both `CollegeAdministrator` and `PostgraduateResearchTutor` successfully accessed the enrolments endpoint across MVC and REST interfaces, fulfilling permissions `P-001` and `P-007` (`X`).
 - **Coarse-Grained Exclusion:** Both `AcademicSupervisor` and `Student` were properly denied access under the core RBAC policy, returning `403 Forbidden` on the REST API and redirecting to `/account/access-denied` on MVC.
 - **Service Integration:** The student lookup endpoint remained accessible without authentication (`200 OK`), confirming that internal module integration via `HttpStudentLookupAdapter` was not broken by end-user policy enforcement.
+
